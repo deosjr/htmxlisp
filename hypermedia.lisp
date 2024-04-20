@@ -7,6 +7,7 @@
 
 #| contacts mock db |#
 (define contactdb (make-hashmap))
+#| TODO id=len, because now we have nondeterminism in the table between runs |#
 (define add-contact (lambda (firstname lastname phone email)
     (hashmap-set! contactdb (gensym) (let ((m (make-hashmap)))
         (hashmap-set! m "first" firstname)
@@ -14,9 +15,25 @@
         (hashmap-set! m "phone" phone)
         (hashmap-set! m "email" email)
         m))))
-(add-contact "Carson" "Gross" "123-456-7890" "carson@example.comz")
-(add-contact "Carson" "Gross" "123-456-7890" "carson@example.comz")
-(add-contact "Carson" "Gross" "123-456-7890" "carson@example.comz")
+(add-contact "John" "Smith" "123-456-7890" "john@example.comz")
+(add-contact "Dana" "Crandith" "123-456-7890" "dcran@example.com")
+(add-contact "Edith" "Neutvaar" "123-456-7890" "en@example.com")
+
+(define search-contacts (lambda (q) (begin
+    (define match-contact (lambda (c q)
+        (if (string:contains (hashmap-ref c "first" "") q) #t
+        (if (string:contains (hashmap-ref c "last" "")  q) #t
+        (if (string:contains (hashmap-ref c "phone" "") q) #t
+        (if (string:contains (hashmap-ref c "email" "") q) #t
+        #f))))))
+    (define loop-and-search (lambda (m keys)
+        (if (not (null? keys)) (let ((c (hashmap-ref contactdb (car keys) #f)))
+          (if (match-contact c q) (hashmap-set! m (car keys) c))
+          (loop-and-search m (cdr keys))
+        ))))
+    (let ((m (make-hashmap)))
+      (loop-and-search m (hashmap-keys contactdb))
+    m))))
 
 #| index.html template in multiple parts |#
 (define layout "<!doctype html>
@@ -49,10 +66,10 @@
         {{range .contacts}}
         {{with fromhashmap .}}
         <tr>
-                <td>{{ .first }}</td>
-                <td>{{ .last }}</td>
-                <td>{{ .phone }}</td>
-                <td>{{ .email }}</td>
+                <td>{{str .first }}</td>
+                <td>{{str .last }}</td>
+                <td>{{str .phone }}</td>
+                <td>{{str .email }}</td>
                 <td><a href='/contacts/{{ .id }}/edit'>Edit</a>
                     <a href='/contacts/{{ .id }}'>View</a></td>
             </tr>
@@ -63,5 +80,7 @@
   {{end}}")
 (define tmpl (template layout content table))
 
-(handlefunc "/contacts" (lambda (w r) (render w tmpl `(("search" ,(formvalue r "q")) ("contacts" ,contactdb) ))))
+(handlefunc "/contacts" (lambda (w r)
+                          (let ((q (formvalue r "q")))
+                            (render w tmpl `(("search" ,q) ("contacts" ,(search-contacts q)) )))))
 )

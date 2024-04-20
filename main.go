@@ -22,6 +22,12 @@ var routingTable = map[string]string{}
 func main() {
 	l := lisp.New()
 
+    l.Env.AddBuiltin("string:contains", func(args []lisp.SExpression) (lisp.SExpression, error) {
+        s := args[0].AsPrimitive().(string)
+        substr := args[1].AsPrimitive().(string)
+        return lisp.NewPrimitive(strings.Contains(s, substr)), nil
+    })
+
     l.Env.AddBuiltin("httpwrite", func(args []lisp.SExpression) (lisp.SExpression, error) {
         w := args[0].AsPrimitive().(http.ResponseWriter)
         s := args[1].AsPrimitive().(string)
@@ -72,6 +78,9 @@ func main() {
             tmpls = append(tmpls, arg.AsPrimitive().(string))
         }
         fm := map[string]any{
+            "str": func(e lisp.SExpression) string {
+                return e.AsPrimitive().(string)
+            },
             "fromhashmap": func(e lisp.SExpression) map[string]any { 
                 m := e.AsPrimitive().(map[lisp.SExpression]lisp.SExpression)
                 ret := map[string]any{}
