@@ -71,7 +71,17 @@ func main() {
         for _, arg := range args {
             tmpls = append(tmpls, arg.AsPrimitive().(string))
         }
-        t := template.Must(template.New("base").Parse(strings.Join(tmpls, "")))
+        fm := map[string]any{
+            "asmap": func(e lisp.SExpression) map[string]any { 
+                m := e.AsPrimitive().(map[lisp.SExpression]lisp.SExpression)
+                ret := map[string]any{}
+                for k, v := range m {
+                    ret[k.AsPrimitive().(string)] = v
+                }
+                return ret
+            },
+        }
+        t := template.Must(template.New("base").Funcs(fm).Parse(strings.Join(tmpls, "")))
         return lisp.NewPrimitive(t), nil
     })
 
