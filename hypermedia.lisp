@@ -47,14 +47,16 @@
         </thead>
         <tbody>
         {{range .contacts}}
+        {{with fromhashmap .}}
         <tr>
-                <td>{{ (asmap .).first }}</td>
-                <td>{{ (asmap .).last }}</td>
-                <td>{{ (asmap .).phone }}</td>
-                <td>{{ (asmap .).email }}</td>
-                <td><a href='/contacts/{{ (asmap .).id }}/edit'>Edit</a>
-                    <a href='/contacts/{{ (asmap .).id }}'>View</a></td>
+                <td>{{ .first }}</td>
+                <td>{{ .last }}</td>
+                <td>{{ .phone }}</td>
+                <td>{{ .email }}</td>
+                <td><a href='/contacts/{{ .id }}/edit'>Edit</a>
+                    <a href='/contacts/{{ .id }}'>View</a></td>
             </tr>
+        {{end}}
         {{end}}
         </tbody>
     </table>

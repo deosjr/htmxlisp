@@ -72,7 +72,7 @@ func main() {
             tmpls = append(tmpls, arg.AsPrimitive().(string))
         }
         fm := map[string]any{
-            "asmap": func(e lisp.SExpression) map[string]any { 
+            "fromhashmap": func(e lisp.SExpression) map[string]any { 
                 m := e.AsPrimitive().(map[lisp.SExpression]lisp.SExpression)
                 ret := map[string]any{}
                 for k, v := range m {
