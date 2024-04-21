@@ -28,6 +28,11 @@ func main() {
         return lisp.NewPrimitive(strings.Contains(s, substr)), nil
     })
 
+    l.Env.AddBuiltin("maplen", func(args []lisp.SExpression) (lisp.SExpression, error) {
+        m := args[0].AsPrimitive().(map[lisp.SExpression]lisp.SExpression)
+        return lisp.NewPrimitive(float64(len(m))), nil
+    })
+
     l.Env.AddBuiltin("httpwrite", func(args []lisp.SExpression) (lisp.SExpression, error) {
         w := args[0].AsPrimitive().(http.ResponseWriter)
         s := args[1].AsPrimitive().(string)

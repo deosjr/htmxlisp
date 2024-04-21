@@ -14,12 +14,15 @@
         (hashmap-set! m "phone" phone)
         (hashmap-set! m "email" email)
         m)))
-
-#| TODO id=len, because now we have nondeterminism in the table between runs |#
-(define save-contact (lambda (c) (begin
-    (hashmap-set! contactdb (gensym) c) #t)))
+(define empty-contact (lambda () (make-contact "" "" "" "")))
+(define save-contact (lambda (c)
+    (let ((id (+ (maplen contactdb) 1)))
+        (hashmap-set! c "id" id)
+        (hashmap-set! contactdb id c)
+        #t)))
 (define add-contact (lambda (firstname lastname phone email)
     (save-contact (make-contact firstname lastname phone email))))
+
 (add-contact "John" "Smith" "123-456-7890" "john@example.comz")
 (add-contact "Dana" "Crandith" "123-456-7890" "dcran@example.com")
 (add-contact "Edith" "Neutvaar" "123-456-7890" "en@example.com")
@@ -137,14 +140,10 @@
     <a href='/contacts'>Back</a>
 </p>{{end}}")
 (define newtmpl (template layout newcontent))
-(handlefunc "/contacts/new" (lambda (w r) (render w newtmpl (make-contact "" "" "" ""))))
+(handlefunc "/contacts/new" (lambda (w r) (render w newtmpl (empty-contact))))
 )
 
 (begin
-#| TODO |#
-(define save-contact (lambda (c) (begin
-    (hashmap-set! contactdb (gensym) c) #t)))
-
 (define handle-post (lambda (w r)
     (let ((c (make-contact (formvalue r "first_name") (formvalue r "last_name") (formvalue r "phone") (formvalue r "email"))))
       (if (save-contact c)
@@ -153,6 +152,6 @@
       ))))
 
 (handlefunc "/contacts/new" (lambda (w r)
-    (if (eqv? (request:method r) "GET") (render w newtmpl (make-contact "" "" "" ""))
+    (if (eqv? (request:method r) "GET") (render w newtmpl (empty-contact))
     (if (eqv? (request:method r) "POST") (handle-post w r)))))
 )
