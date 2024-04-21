@@ -85,6 +85,11 @@ func main() {
         key := args[1].AsPrimitive().(string)
         return lisp.NewPrimitive(r.FormValue(key)), nil
     })
+    l.Env.AddBuiltin("pathvalue", func(args []lisp.SExpression) (lisp.SExpression, error) {
+        r := args[0].AsPrimitive().(*http.Request)
+        key := args[1].AsPrimitive().(string)
+        return lisp.NewPrimitive(r.PathValue(key)), nil
+    })
 
     l.Env.AddBuiltin("template", func(args []lisp.SExpression) (lisp.SExpression, error) {
         tmpls := []string{}

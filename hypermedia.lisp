@@ -24,7 +24,7 @@
 
 (define save-contact (lambda (c)
     (if (not (validate-contact c)) #f
-    (let ((id (+ (maplen contactdb) 1)))
+    (let ((id (number->string (+ (maplen contactdb) 1))))
         (hashmap-set! c "id" id)
         (hashmap-set! contactdb id c)
         #t))))
@@ -98,8 +98,8 @@
                 <td>{{str .last }}</td>
                 <td>{{str .phone }}</td>
                 <td>{{str .email }}</td>
-                <td><a href='/contacts/{{ .id }}/edit'>Edit</a>
-                    <a href='/contacts/{{ .id }}'>View</a></td>
+                <td><a href='/contacts/{{str .id }}/edit'>Edit</a>
+                    <a href='/contacts/{{str .id }}'>View</a></td>
             </tr>
         {{end}}
         {{end}}
@@ -152,6 +152,7 @@
 (define handle-post (lambda (w r)
     (let ((c (make-contact (formvalue r "first_name") (formvalue r "last_name") (formvalue r "phone") (formvalue r "email"))))
       (if (save-contact c)
+        #| we're going to ignore flash messages for now |#
         (redirect w r "/contacts")
         (render w newtmpl c)
       ))))
@@ -159,4 +160,19 @@
 (handlefunc "/contacts/new" (lambda (w r)
     (if (eqv? (request:method r) "GET") (render w newtmpl (empty-contact))
     (if (eqv? (request:method r) "POST") (handle-post w r)))))
+)
+
+(begin
+(define showtmpl (template layout "{{define \"content\"}}
+<h1>{{str .first}} {{str .last}}</h1>
+<div>
+    <div>Phone: {{str .phone}}</div>
+    <div>Email: {{str .email}}</div>
+</div>
+<p>
+    <a href='/contacts/{{str .id}}/edit'>Edit</a>
+    <a href='/contacts'>Back</a>
+</p>{{end}}"))
+(handlefunc "/contacts/{id}" (lambda (w r)
+    (render w showtmpl (hashmap-ref contactdb (pathvalue r "id") (empty-contact)))))
 )
