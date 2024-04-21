@@ -41,9 +41,18 @@
 <head>
     <title>Contact App</title>
     <script src='https://unpkg.com/htmx.org@1.9.12/dist/htmx.min.js'></script>
+    <link rel='stylesheet' href='https://unpkg.com/missing.css@0.2.0/missing.min.css'>
+    <style>td { vertical-align: middle; }</style>
+    <style>table { width: 100%; margin-bottom: 12px; }</style>
 </head>
 <body hx-boost='true'>
 <main>
+    <header>
+        <h1>
+            <h>CONTACTS.APP</h>
+            <sub-title>A Demo Contacts Application</sub-title>
+        </h1>
+    </header>
     {{template \"content\" .}}
 </main>
 </body>
@@ -54,6 +63,9 @@
             <input type='submit' value='Search'/>
      </form>
      {{template \"table\" .}}
+     <p>
+        <a href='/contacts/new'>Add Contact</a>
+    </p>
      {{end}}")
 (define table "{{define \"table\"}}
    <table>
