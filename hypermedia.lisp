@@ -149,7 +149,7 @@
 )
 
 (begin
-(define handle-post (lambda (w r)
+(define handle-post-new (lambda (w r)
     (let ((c (make-contact (formvalue r "first_name") (formvalue r "last_name") (formvalue r "phone") (formvalue r "email"))))
       (if (save-contact c)
         #| we're going to ignore flash messages for now |#
@@ -159,7 +159,7 @@
 
 (handlefunc "/contacts/new" (lambda (w r)
     (if (eqv? (request:method r) "GET") (render w newtmpl (empty-contact))
-    (if (eqv? (request:method r) "POST") (handle-post w r)))))
+    (if (eqv? (request:method r) "POST") (handle-post-new w r)))))
 )
 
 (begin
@@ -176,3 +176,55 @@
 (handlefunc "/contacts/{id}" (lambda (w r)
     (render w showtmpl (hashmap-ref contactdb (pathvalue r "id") (empty-contact)))))
 )
+
+(begin
+(define edittmpl (template layout "{{define \"content\"}}
+<form action='/contacts/{{ str .id }}/edit' method='post'>
+    <fieldset>
+        <legend>Contact Values</legend>
+        <div class='table rows'>
+            <p>
+                <label for='email'>Email</label>
+                <input name='email' id='email' type='email' placeholder='Email' value='{{ str .email }}'>
+                <span class='error'>{{ str .errors }}</span>
+            </p>
+            <p>
+                <label for='first_name'>First Name</label>
+                <input name='first_name' id='first_name' type='text' placeholder='First Name' value='{{ str .first }}'>
+            </p>
+            <p>
+                <label for='last_name'>Last Name</label>
+                <input name='last_name' id='last_name' type='text' placeholder='Last Name' value='{{ str .last }}'>
+            </p>
+            <p>
+                <label for='phone'>Phone</label>
+                <input name='phone' id='phone' type='text' placeholder='Phone' value='{{ str .phone }}'>
+            </p>
+        </div>
+        <button>Save</button>
+    </fieldset>
+</form>
+<form action='/contacts/{{ str .id }}/delete' method='post'>
+    <button>Delete Contact</button>
+</form>
+
+<p>
+    <a href='/contacts/'>Back</a>
+</p>
+{{end}}"))
+(define handle-post-edit (lambda (w r)
+    (let ((c (make-contact (formvalue r "first_name") (formvalue r "last_name") (formvalue r "phone") (formvalue r "email"))))
+      #| TODO: update-contact |#
+      (if (save-contact c)
+        #| we're going to ignore flash messages for now |#
+        (redirect w r (string-append "/contacts/" (pathvalue r "id")))
+        (render w edittmpl c)
+      ))))
+(handlefunc "/contacts/{id}/edit" (lambda (w r)
+    (if (eqv? (request:method r) "GET") (render w edittmpl (hashmap-ref contactdb (pathvalue r "id") (empty-contact)))
+    (if (eqv? (request:method r) "POST") (handle-post-edit w r)))))
+)
+
+#| TODO: delete-contact |#
+(handlefunc "/contacts/{id}/delete" (lambda (w r)
+    (if (eqv? (request:method r) "POST") (redirect w r "/contacts"))))
