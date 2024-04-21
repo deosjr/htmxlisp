@@ -96,3 +96,44 @@
                           (let ((q (formvalue r "q")))
                             (render w tmpl `(("search" ,q) ("contacts" ,(search-contacts q)) )))))
 )
+
+(begin
+(define newcontent "{{define \"content\"}}{{with fromhashmap .contact}} 
+<form action='/contacts/new' method='post'>
+    <fieldset>
+        <legend>Contact Values</legend>
+        <div class='table rows'>
+            <p>
+                <label for='email'>Email</label>
+                <input name='email' id='email' type='text' placeholder='Email' value='{{ str .email }}'>
+                <span class='error'>{{ str .errors.email }}</span>
+            </p>
+            <p>
+                <label for='first_name'>First Name</label>
+                <input name='first_name' id='first_name' type='text' placeholder='First Name' value='{{ str .first }}'>
+                <span class='error'>{{ str .errors.first }}</span>
+            </p>
+            <p>
+                <label for='last_name'>Last Name</label>
+                <input name='last_name' id='last_name' type='text' placeholder='Last Name' value='{{ str .last }}'>
+                <span class='error'>{{ str .errors.last }}</span>
+            </p>
+            <p>
+                <label for='phone'>Phone</label>
+                <input name='phone' id='phone' type='text' placeholder='Phone' value='{{ str .phone }}'>
+                <span class='error'>{{ str .errors.phone }}</span>
+            </p>
+        </div>
+        <button>Save</button>
+    </fieldset>
+</form>
+
+<p>
+    <a href='/contacts'>Back</a>
+</p>{{end}}{{end}}")
+(define newtmpl (template layout newcontent))
+#| need to set at least one value, otherwise 'with' in template doesnt execute |#
+(define test (make-hashmap))
+(hashmap-set! test "id" "abc")
+(handlefunc "/contacts/new" (lambda (w r) (render w newtmpl `(("contact" ,test)))))
+)

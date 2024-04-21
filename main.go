@@ -35,6 +35,7 @@ func main() {
         return lisp.NewPrimitive(true), nil
     })
     
+    // TODO: path only checks prefix, use {$} to match exact path
     // TODO: path variables like /path/{var} and name clashes in routing table
     // (handlefunc "/path" (lambda () ...))
     // registers under gensym in routing table so we can redeclare
@@ -79,13 +80,23 @@ func main() {
         }
         fm := map[string]any{
             "str": func(e lisp.SExpression) string {
+                if e == nil {
+                    return ""
+                }
                 return e.AsPrimitive().(string)
             },
-            "fromhashmap": func(e lisp.SExpression) map[string]any { 
-                m := e.AsPrimitive().(map[lisp.SExpression]lisp.SExpression)
+            "fromhashmap": func(e any) map[string]any { 
                 ret := map[string]any{}
-                for k, v := range m {
-                    ret[k.AsPrimitive().(string)] = v
+                switch t := e.(type) { 
+                case lisp.SExpression:
+                    m := t.AsPrimitive().(map[lisp.SExpression]lisp.SExpression)
+                    for k, v := range m {
+                        ret[k.AsPrimitive().(string)] = v
+                    }
+                case map[lisp.SExpression]lisp.SExpression:
+                    for k, v := range t {
+                        ret[k.AsPrimitive().(string)] = v
+                    }
                 }
                 return ret
             },
