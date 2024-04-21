@@ -15,17 +15,21 @@
         (hashmap-set! m "email" email)
         m)))
 (define empty-contact (lambda () (make-contact "" "" "" "")))
+(define validate-contact (lambda (c)
+    (let ((email (hashmap-ref c "email" "")))
+        (if (eqv? email "") (begin (hashmap-set! c "errors" "Email Required") #f)
+        #| yes this is false positive if name/phone includes email, but whatever.. |#
+        (if (not (= 0 (maplen (search-contacts email)))) (begin (hashmap-set! c "errors" "Email Must Be Unique") #f)
+        #t)))))
+
 (define save-contact (lambda (c)
+    (if (not (validate-contact c)) #f
     (let ((id (+ (maplen contactdb) 1)))
         (hashmap-set! c "id" id)
         (hashmap-set! contactdb id c)
-        #t)))
+        #t))))
 (define add-contact (lambda (firstname lastname phone email)
     (save-contact (make-contact firstname lastname phone email))))
-
-(add-contact "John" "Smith" "123-456-7890" "john@example.comz")
-(add-contact "Dana" "Crandith" "123-456-7890" "dcran@example.com")
-(add-contact "Edith" "Neutvaar" "123-456-7890" "en@example.com")
 
 (define search-contacts (lambda (q) (begin
     (define match-contact (lambda (c q)
@@ -42,6 +46,10 @@
     (let ((m (make-hashmap)))
       (loop-and-search m (hashmap-keys contactdb))
     m))))
+
+(add-contact "John" "Smith" "123-456-7890" "john@example.comz")
+(add-contact "Dana" "Crandith" "123-456-7890" "dcran@example.com")
+(add-contact "Edith" "Neutvaar" "123-456-7890" "en@example.com")
 
 #| index.html template in multiple parts |#
 (define layout "<!doctype html>
@@ -114,22 +122,19 @@
             <p>
                 <label for='email'>Email</label>
                 <input name='email' id='email' type='text' placeholder='Email' value='{{ str .email }}'>
-                <span class='error'>{{ str .errors.email }}</span>
+                <span class='error'>{{ str .errors }}</span>
             </p>
             <p>
                 <label for='first_name'>First Name</label>
                 <input name='first_name' id='first_name' type='text' placeholder='First Name' value='{{ str .first }}'>
-                <span class='error'>{{ str .errors.first }}</span>
             </p>
             <p>
                 <label for='last_name'>Last Name</label>
                 <input name='last_name' id='last_name' type='text' placeholder='Last Name' value='{{ str .last }}'>
-                <span class='error'>{{ str .errors.last }}</span>
             </p>
             <p>
                 <label for='phone'>Phone</label>
                 <input name='phone' id='phone' type='text' placeholder='Phone' value='{{ str .phone }}'>
-                <span class='error'>{{ str .errors.phone }}</span>
             </p>
         </div>
         <button>Save</button>
