@@ -114,28 +114,28 @@
 )
 
 (begin
-(define newcontent "{{define \"content\"}}
+(define input (lambda (form lower upper)
+    (string-append
+        "<label for='" form "'>" upper "</label>
+        <input name='" lower "' id='" lower "' type='text' placeholder='" upper "' value='{{ str ." lower " }}'>")))
+(define newcontent (string-append "{{define \"content\"}}
 <form action='/contacts/new' method='post'>
     <fieldset>
         <legend>Contact Values</legend>
         <div class='table rows'>
-            <p>
-                <label for='email'>Email</label>
-                <input name='email' id='email' type='text' placeholder='Email' value='{{ str .email }}'>
-                <span class='error'>{{ str .errors }}</span>
+            <p>"
+            (input "email" "email" "Email")
+            "<span class='error'>{{ str .errors }}</span>
             </p>
-            <p>
-                <label for='first_name'>First Name</label>
-                <input name='first_name' id='first_name' type='text' placeholder='First Name' value='{{ str .first }}'>
-            </p>
-            <p>
-                <label for='last_name'>Last Name</label>
-                <input name='last_name' id='last_name' type='text' placeholder='Last Name' value='{{ str .last }}'>
-            </p>
-            <p>
-                <label for='phone'>Phone</label>
-                <input name='phone' id='phone' type='text' placeholder='Phone' value='{{ str .phone }}'>
-            </p>
+            <p>"
+            (input "first_name" "first" "First Name")
+            "</p>
+            <p>"
+            (input "last_name" "last" "Last Name")
+            "</p>
+            <p>"
+            (input "phone" "phone" "Phone")
+            "</p>
         </div>
         <button>Save</button>
     </fieldset>
@@ -143,7 +143,7 @@
 
 <p>
     <a href='/contacts'>Back</a>
-</p>{{end}}")
+</p>{{end}}"))
 (define newtmpl (template layout newcontent))
 (handlefunc "/contacts/new" (lambda (w r) (render w newtmpl (empty-contact))))
 )
@@ -185,7 +185,7 @@
         <div class='table rows'>
             <p>
                 <label for='email'>Email</label>
-                <input name='email' id='email' type='email' placeholder='Email' value='{{ str .email }}'>
+                <input name='email' id='email' type='text' placeholder='Email' value='{{ str .email }}'>
                 <span class='error'>{{ str .errors }}</span>
             </p>
             <p>

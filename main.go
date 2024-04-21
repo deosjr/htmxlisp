@@ -118,6 +118,13 @@ func main() {
                 }
                 return ret
             },
+            "lisp": func(funcname string, v ...lisp.SExpression) lisp.SExpression {
+                e, err := l.EvalExpr(lisp.MakeConsList(append([]lisp.SExpression{lisp.NewSymbol(funcname)}, v...)))
+                if err != nil {
+                    panic(err)
+                }
+                return e
+            },
         }
         t := template.Must(template.New("base").Funcs(fm).Parse(strings.Join(tmpls, "")))
         return lisp.NewPrimitive(t), nil
