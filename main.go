@@ -34,6 +34,11 @@ func main() {
         fmt.Fprint(w, s)
         return lisp.NewPrimitive(true), nil
     })
+
+    l.Env.AddBuiltin("request:method", func(args []lisp.SExpression) (lisp.SExpression, error) {
+        r := args[0].AsPrimitive().(*http.Request)
+        return lisp.NewPrimitive(r.Method), nil
+    })
     
     // TODO: path only checks prefix, use {$} to match exact path
     // TODO: path variables like /path/{var} and name clashes in routing table
@@ -52,7 +57,10 @@ func main() {
 
         if !ok {
             http.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
-                fn, _ := l.EvalExpr(sym)
+                fn, err := l.EvalExpr(sym)
+                if err != nil {
+                    panic(err)
+                }
                 l.EvalExpr(lisp.MakeConsList([]lisp.SExpression{fn, lisp.NewPrimitive(w), lisp.NewPrimitive(r)}))
             })
         }
@@ -108,20 +116,26 @@ func main() {
     l.Env.AddBuiltin("render", func(args []lisp.SExpression) (lisp.SExpression, error) {
         w := args[0].AsPrimitive().(http.ResponseWriter)
         t := args[1].AsPrimitive().(*template.Template)
-        assoclist, err := lisp.UnpackConsList(args[2])
-        if err != nil {
-            panic(err)
-        }
         m := map[string]any{}
-        for _, cons := range assoclist {
-            c, err := lisp.UnpackConsList(cons)
+        if args[2].IsPair() { // assume assoclist
+            assoclist, err := lisp.UnpackConsList(args[2])
             if err != nil {
                 panic(err)
             }
-            if len(c) != 2 {
-                panic("not a cons cell")
+            for _, cons := range assoclist {
+                c, err := lisp.UnpackConsList(cons)
+                if err != nil {
+                    panic(err)
+                }
+                if len(c) != 2 {
+                    panic("not a cons cell")
+                }
+                m[c[0].AsPrimitive().(string)] = c[1].AsPrimitive()
             }
-            m[c[0].AsPrimitive().(string)] = c[1].AsPrimitive()
+        } else { // assume map[sexpr]sexpr
+            for k, v := range args[2].AsPrimitive().(map[lisp.SExpression]lisp.SExpression) {
+                m[k.AsPrimitive().(string)] = v
+            }
         }
         if err := t.Execute(w, m); err != nil {
             panic(err)

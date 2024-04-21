@@ -7,14 +7,19 @@
 
 #| contacts mock db |#
 (define contactdb (make-hashmap))
-#| TODO id=len, because now we have nondeterminism in the table between runs |#
-(define add-contact (lambda (firstname lastname phone email)
-    (hashmap-set! contactdb (gensym) (let ((m (make-hashmap)))
+(define make-contact (lambda (firstname lastname phone email)
+    (let ((m (make-hashmap)))
         (hashmap-set! m "first" firstname)
         (hashmap-set! m "last"  lastname)
         (hashmap-set! m "phone" phone)
         (hashmap-set! m "email" email)
-        m))))
+        m)))
+
+#| TODO id=len, because now we have nondeterminism in the table between runs |#
+(define save-contact (lambda (c) (begin
+    (hashmap-set! contactdb (gensym) c) #t)))
+(define add-contact (lambda (firstname lastname phone email)
+    (save-contact (make-contact firstname lastname phone email))))
 (add-contact "John" "Smith" "123-456-7890" "john@example.comz")
 (add-contact "Dana" "Crandith" "123-456-7890" "dcran@example.com")
 (add-contact "Edith" "Neutvaar" "123-456-7890" "en@example.com")
@@ -98,7 +103,7 @@
 )
 
 (begin
-(define newcontent "{{define \"content\"}}{{with fromhashmap .contact}} 
+(define newcontent "{{define \"content\"}}
 <form action='/contacts/new' method='post'>
     <fieldset>
         <legend>Contact Values</legend>
@@ -130,10 +135,24 @@
 
 <p>
     <a href='/contacts'>Back</a>
-</p>{{end}}{{end}}")
+</p>{{end}}")
 (define newtmpl (template layout newcontent))
-#| need to set at least one value, otherwise 'with' in template doesnt execute |#
-(define test (make-hashmap))
-(hashmap-set! test "id" "abc")
-(handlefunc "/contacts/new" (lambda (w r) (render w newtmpl `(("contact" ,test)))))
+(handlefunc "/contacts/new" (lambda (w r) (render w newtmpl (make-contact "" "" "" ""))))
+)
+
+(begin
+#| TODO |#
+(define save-contact (lambda (c) (begin
+    (hashmap-set! contactdb (gensym) c) #t)))
+
+(define handle-post (lambda (w r)
+    (let ((c (make-contact (formvalue r "first_name") (formvalue r "last_name") (formvalue r "phone") (formvalue r "email"))))
+      (if (save-contact c)
+        (redirect w r "/contacts")
+        (render w newtmpl c)
+      ))))
+
+(handlefunc "/contacts/new" (lambda (w r)
+    (if (eqv? (request:method r) "GET") (render w newtmpl (make-contact "" "" "" ""))
+    (if (eqv? (request:method r) "POST") (handle-post w r)))))
 )
