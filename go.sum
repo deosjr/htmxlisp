@@ -1,4 +1,4 @@
-github.com/deosjr/whistle v0.0.0-20240419184205-cdfc4a4f1922 h1:E4KaAfUToQ5B2EAGJUhj6L3DLAWd/Orohkk9NyZiflc=
-github.com/deosjr/whistle v0.0.0-20240419184205-cdfc4a4f1922/go.mod h1:AqJExKTUYXaa+5DDBu0J+d4ajZbabQEiafNepi/Jwvk=
+github.com/deosjr/whistle v0.0.0-20240423123610-a0b3b88ab075 h1:rSc4RTvZfdqgStWjNIcFmblDdDSla4bfB17NSJF72XQ=
+github.com/deosjr/whistle v0.0.0-20240423123610-a0b3b88ab075/go.mod h1:AqJExKTUYXaa+5DDBu0J+d4ajZbabQEiafNepi/Jwvk=
 github.com/google/uuid v1.6.0 h1:NIvaJDMOsjHA8n1jAhLSgzrAzy1Hgr+hNrb57e+94F0=
 github.com/google/uuid v1.6.0/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=

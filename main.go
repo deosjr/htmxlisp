@@ -200,5 +200,18 @@ func main() {
         }
     }
 
+    // TODO: put this behind an html form page
+    for path, sym := range routingTable {
+        fn, err := l.EvalExpr(lisp.NewSymbol(sym))
+        if err != nil {
+            panic(err)
+        }
+        s, err := l.EvalExpr(lisp.MakeConsList([]lisp.SExpression{lisp.NewSymbol("proc->string"), fn}))
+        if err != nil {
+            panic(err)
+        }
+        fmt.Println(path, s)
+    }
+
     for {}
 }
