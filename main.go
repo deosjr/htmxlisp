@@ -66,7 +66,10 @@ func main() {
                 if err != nil {
                     panic(err)
                 }
-                l.EvalExpr(lisp.MakeConsList([]lisp.SExpression{fn, lisp.NewPrimitive(w), lisp.NewPrimitive(r)}))
+                _, err = l.EvalExpr(lisp.MakeConsList([]lisp.SExpression{fn, lisp.NewPrimitive(w), lisp.NewPrimitive(r)}))
+                if err != nil {
+                    panic(err)
+                }
             })
         }
 		return lisp.NewPrimitive(true), nil
@@ -149,9 +152,16 @@ func main() {
                 }
                 m[c[0].AsPrimitive().(string)] = c[1].AsPrimitive()
             }
-        } else { // assume map[sexpr]sexpr
-            for k, v := range args[2].AsPrimitive().(map[lisp.SExpression]lisp.SExpression) {
-                m[k.AsPrimitive().(string)] = v
+        } else {
+            switch t := args[2].AsPrimitive().(type) {
+            case map[lisp.SExpression]lisp.SExpression:
+                for k, v := range t {
+                    m[k.AsPrimitive().(string)] = v
+                }
+            case map[string]string:
+                for k, v := range t {
+                    m[k] = v
+                }
             }
         }
         if err := t.Execute(w, m); err != nil {
@@ -185,33 +195,46 @@ func main() {
         fmt.Fprintf(w, "%s", e)
     })
 
+    l.Env.AddBuiltin("routingtable", func(args []lisp.SExpression) (lisp.SExpression, error) {
+        m := map[string]string{}
+        for path, sym := range routingTable {
+            fn, err := l.EvalExpr(lisp.NewSymbol(sym))
+            if err != nil {
+                panic(err)
+            }
+            s, err := l.EvalExpr(lisp.MakeConsList([]lisp.SExpression{lisp.NewSymbol("proc->string"), fn}))
+            if err != nil {
+                panic(err)
+            }
+            m[path] = s.AsPrimitive().(string)
+        }
+        return lisp.NewPrimitive(m), nil
+    })
+
     go http.ListenAndServe(":8080", nil)
 
-    // TODO parameterise filename
-    // TODO toggle step-through or eval everything
-    sexprs, err := lisp.ParseFile("hypermedia.lisp")
-    if err != nil {
+    if err := evalFromFile(l, "hypermedia.lisp"); err != nil {
         panic(err)
+    }
+    if err := evalFromFile(l, "admin.lisp"); err != nil {
+        panic(err)
+    }
+
+    // wait forever, http server is spinning
+    for {}
+}
+
+// TODO toggle step-through or eval everything
+func evalFromFile(l lisp.Lisp, filename string) error {
+    sexprs, err := lisp.ParseFile(filename)
+    if err != nil {
+        return err
     }
     for _, ex := range sexprs {
         _, err := l.EvalExpr(ex)
         if err != nil {
-            panic(err)
+            return err
         }
     }
-
-    // TODO: put this behind an html form page
-    for path, sym := range routingTable {
-        fn, err := l.EvalExpr(lisp.NewSymbol(sym))
-        if err != nil {
-            panic(err)
-        }
-        s, err := l.EvalExpr(lisp.MakeConsList([]lisp.SExpression{lisp.NewSymbol("proc->string"), fn}))
-        if err != nil {
-            panic(err)
-        }
-        fmt.Println(path, s)
-    }
-
-    for {}
+    return nil
 }
