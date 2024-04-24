@@ -63,7 +63,7 @@
     <span class='error'>{{ str .codeerr }}</span>
     </p>
     <input name='output' id='output' type='text'>
-    <button hx-post='/admin/new' hx-include='#path,#output'>Save</button>
+    <button hx-post='/admin/new' hx-include='#path,#output' hx-target='main'>Save</button>
 </div>
 
 <p>
@@ -137,5 +137,8 @@ console.log(flask.getCode())
 (define newadmintmpl (template adminlayout newadmin))
 (handlefunc "/admin/new" (lambda (w r)
     (if (eqv? (request:method r) "GET") (render w newadmintmpl (make-hashmap))
-    (if (eqv? (request:method r) "POST") (httpwrite w "great-success" )))))
+    (if (eqv? (request:method r) "POST")
+      (begin
+        (handlefunc (formvalue r "path") (eval (read-string (formvalue r "output"))))
+        (redirect w r "/admin" ))))))
 )
